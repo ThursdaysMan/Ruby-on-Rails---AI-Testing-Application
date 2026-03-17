@@ -60,5 +60,10 @@ group :test do
   
   gem 'bootstrap'
   gem 'sassc-rails'
+
+  gem 'tensorflow'
+  gem 'npy'
+  gem 'numo-narray'
+  gem 'chroma-db'
   
 end
