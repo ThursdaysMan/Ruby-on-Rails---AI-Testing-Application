@@ -1,0 +1,4 @@
+class MapsController < ApplicationController
+
+   
+end

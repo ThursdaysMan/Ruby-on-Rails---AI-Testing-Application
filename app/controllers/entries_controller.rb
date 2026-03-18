@@ -1,7 +1,7 @@
 class EntriesController < ApplicationController
 
     def index
-       @entries = ExampleModel.all
+       @entries = ExampleModel.all()
    end
 
    def new

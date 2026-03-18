@@ -3,6 +3,7 @@ require_relative "boot"
 require "rails/all"
 require "sassc-rails"
 require "bootstrap"
+require "gd/gis"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
