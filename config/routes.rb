@@ -14,6 +14,9 @@ Rails.application.routes.draw do
   # root "posts#index"
   #root 'application#hello'
 
-  root 'entries#index'
-  resources :entries, only: [:create, :new, :destroy]
+  #root 'entries#index'
+  #resources :entries, only: [:create, :new, :destroy]
+
+  root 'maps#index'
+  resources :maps, only: [:index]
 end

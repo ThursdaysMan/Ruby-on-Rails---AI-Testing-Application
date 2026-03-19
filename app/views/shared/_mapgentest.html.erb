@@ -1,0 +1,106 @@
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin="">
+</script>
+
+
+
+<div id="map" style="height: 75vh;">
+</div>
+
+
+
+<script>
+console.log("<%= @maps.try(:count) || 0 %>")
+
+console.log("Tile shared URLS:")
+<% (@maps || []).each do |map_record| %>
+  <% map_record.map_tiles.each do |tile| %>
+    console.log("<%= tile.data %>");
+  <% end %>
+<% end %>
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  // Initialize the map
+  var map = L.map('map').setView([0, 0], 2);
+
+  // Store base layers and overlays
+  var baseLayersByMap = {};
+  var overlaysByMap = {};
+
+  <% (@maps || []).each do |map_record| %>
+    <% tile = map_record.map_tiles.first %>
+
+    // Only add base layer if a tile exists
+    <% if tile.present? %>
+      baseLayersByMap["<%= map_record.name %>"] = L.tileLayer("<%= tile.data %>", {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      });
+    <% end %>
+
+    // Overlays for this map
+    overlaysByMap["<%= map_record.name %>"] = L.layerGroup([
+      <% map_record.user_layers.each_with_index do |layer, i| %>
+        L.geoJSON(<%= raw layer.geojson_data %>)<%= ',' unless i == map_record.user_layers.size - 1 %>
+      <% end %>
+    ]);
+  <% end %>
+
+  // Add first map as default
+  var firstMapName = Object.keys(baseLayersByMap)[0];
+  if (firstMapName) {
+    baseLayersByMap[firstMapName].addTo(map);
+    overlaysByMap[firstMapName].addTo(map);
+  }
+
+  // Dropdown control for switching maps
+  var mapControl = L.control({ position: 'topright' });
+
+  mapControl.onAdd = function(mapInstance) {
+    var div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+    var select = L.DomUtil.create('select', '', div);
+
+    // Populate dropdown
+    Object.keys(baseLayersByMap).forEach(function(name) {
+      var option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      select.appendChild(option);
+    });
+
+    // Prevent map dragging when interacting with dropdown
+    L.DomEvent.disableClickPropagation(div);
+
+    // Handle switching maps
+    select.onchange = function() {
+      var selected = select.value;
+
+      // Remove current layers
+      Object.values(baseLayersByMap).forEach(function(layer) {
+        mapInstance.removeLayer(layer);
+      });
+      Object.values(overlaysByMap).forEach(function(layer) {
+        mapInstance.removeLayer(layer);
+      });
+
+      // Add selected map's layers
+      baseLayersByMap[selected].addTo(mapInstance);
+      overlaysByMap[selected].addTo(mapInstance);
+    };
+
+    return div;
+  };
+
+  mapControl.addTo(map);
+});
+</script>
+
+
