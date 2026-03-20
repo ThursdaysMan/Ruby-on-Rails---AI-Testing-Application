@@ -1,0 +1,121 @@
+<%= turbo_frame_tag "map_container" do %>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="">
+  </script>
+
+
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+
+  <div id="map" style="height: 75vh;"></div>
+
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var map = L.map('map').setView([0, 0], 2);
+
+    // Group layers by map
+    var baseLayersByMap = {};
+    var overlaysByMap = {};
+
+    <% (@maps || []).each do |map_record| %>
+      <% tile = map_record.map_tiles.first %>
+      <% if tile.present? %>
+        baseLayersByMap["<%= map_record.name %>"] =
+          L.tileLayer("<%= tile.data %>", { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+      <% end %>
+
+      overlaysByMap["<%= map_record.name %>"] = {};
+      overlaysByMap["<%= map_record.name %>"] = {};
+
+      <% map_record.user_layers.each do |layer| %>
+        overlaysByMap["<%= j map_record.name %>"]["<%= j layer.name %>"] = L.geoJSON(<%= raw layer.geojson_data %>, {
+          onEachFeature: function (feature, leafletLayer) {
+            const props = feature.properties || {};
+
+            // 'name' looks in GeoJSON first, then falls back to the Rails Layer Name
+            let name = props.name || "<%= j layer.name %>";
+            
+            let amenity = props.amenity || "Category Not Found";
+            let description = props.popupContent || props.description || "No description available";
+
+            // Create a html formatted output
+            let html = `
+              <div style="min-width: 150px;">
+                <b style="font-size: 1.1em; color: #2c3e50;">Name: ${name}</b>
+                <br>
+                <p style="font-size: 0.95em; margin-bottom: 0px; margin-top: 10px;"><b>Status:</b> ${amenity}</p>
+                <p style="font-size: 0.95em; margin-top: 0px;"><b>Description:</b> ${description}</p>
+              </div>
+            `;
+
+            leafletLayer.bindPopup(html);
+          }
+        });
+      <% end %>
+    
+    
+      <% end %>
+
+    // --- Initialize first map ---
+    var firstMapName = Object.keys(baseLayersByMap)[0];
+    var currentBaseLayer = baseLayersByMap[firstMapName];
+    var currentOverlays = overlaysByMap[firstMapName];
+
+    if (currentBaseLayer) currentBaseLayer.addTo(map);
+    Object.values(currentOverlays).forEach(layer => layer.addTo(map));
+
+    // --- Add Leaflet layer control for overlays only ---
+    var overlayControl = L.control.layers(null, currentOverlays, { collapsed: false }).addTo(map);
+
+    // --- Add dropdown for map selection ---
+    var mapControlDiv = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+    var select = L.DomUtil.create('select', '', mapControlDiv);
+    Object.keys(baseLayersByMap).forEach(name => {
+      var option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      if(name === firstMapName) option.selected = true;
+      select.appendChild(option);
+    });
+    L.DomEvent.disableClickPropagation(mapControlDiv);
+
+    select.onchange = function() {
+      var selected = select.value;
+
+      // Remove current layers
+      if (currentBaseLayer) map.removeLayer(currentBaseLayer);
+      Object.values(currentOverlays).forEach(layer => map.removeLayer(layer));
+      map.removeControl(overlayControl);
+
+      // Add selected map's layers
+      currentBaseLayer = baseLayersByMap[selected];
+      currentOverlays = overlaysByMap[selected];
+      if (currentBaseLayer) currentBaseLayer.addTo(map);
+      Object.values(currentOverlays).forEach(layer => layer.addTo(map));
+
+      // Add new overlay control for this map
+      overlayControl = L.control.layers(null, currentOverlays, { collapsed: false }).addTo(map);
+    };
+
+    L.Control.MapSelect = L.Control.extend({
+      onAdd: function() { return mapControlDiv; },
+      onRemove: function() {}
+    });
+    new L.Control.MapSelect({ position: 'topright' }).addTo(map);
+  });
+  </script>
+  <% end %>
+

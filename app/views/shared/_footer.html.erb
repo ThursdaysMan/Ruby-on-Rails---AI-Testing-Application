@@ -1,3 +1,25 @@
+
+<div>
+  <div class="row align-items-center">  
+    <div class="col-md-3 d-flex align-items-center justify-content-center">     
+      <%= link_to show_base_map_path, data: { turbo_frame: "map_container" }, class: "text-decoration-none" do %>    
+        <p>Map</p>
+      <% end %>
+    </div>
+    <div class="col-md-3 d-flex align-items-center justify-content-center"> 
+      <%= link_to update_alert_map_path, data: { turbo_frame: "map_container" }, class: "text-decoration-none" do %>
+        <p>Alert Create</p>
+      <% end %>
+    </div>
+    <div class="col-md-3 d-flex align-items-center justify-content-center"> 
+      <p>Alert Edit</p>
+    </div>
+    <div class="col-md-3 d-flex align-items-center justify-content-center"> 
+      <p>Notifications</p>
+    </div>
+  </div>
+</div>
+
 <footer class="container-fluid" style="height: 5vh;">
 <hr/>  
 <div class="row align-items-center">  

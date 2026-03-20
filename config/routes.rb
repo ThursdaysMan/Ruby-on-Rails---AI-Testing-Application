@@ -19,4 +19,8 @@ Rails.application.routes.draw do
 
   root 'maps#index'
   resources :maps, only: [:index]
+  resources :alert_layers, only: [:create, :destroy, :update]
+
+  get 'update_alert_map', to: 'maps#update_alert_map', as: 'update_alert_map'
+  get 'show_base_map', to: 'maps#show_base_map', as: 'show_base_map'
 end

@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_18_162658) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_20_144915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "alert_layers", force: :cascade do |t|
+    t.string "name", null: false
+    t.jsonb "geojson_data", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_alert_layers_on_user_id"
+  end
 
   create_table "map_map_tiles", force: :cascade do |t|
     t.bigint "map_id", null: false
@@ -70,6 +79,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_18_162658) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "alert_layers", "users"
   add_foreign_key "map_map_tiles", "map_tiles"
   add_foreign_key "map_map_tiles", "maps"
   add_foreign_key "maps", "users"

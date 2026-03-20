@@ -40,3 +40,13 @@ UserLayer.find_or_create_by!(
     name: "Example GeoJson Overlay",
     geojson_data: geojson_data
 )
+
+geojson_file2 = Rails.root.join("test/fixtures/files/example2.geojson")
+geojson_data2 = File.read(geojson_file2)
+
+UserLayer.find_or_create_by!(
+    map: map2,
+    user: dummy,
+    name: "Example 2 GeoJson Overlay",
+    geojson_data: geojson_data2
+)

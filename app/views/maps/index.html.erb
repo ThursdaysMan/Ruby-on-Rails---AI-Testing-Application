@@ -1,6 +1,7 @@
-<div>
- <%= render 'shared/mapgentest2' %>
-</div>
+
+    <%= turbo_frame_tag "map_container" do %>
+        <%= render 'shared/mapboxdynamic' %>
+    <% end %>
 
 <div>
     <p class="notice"><%= notice %></p>

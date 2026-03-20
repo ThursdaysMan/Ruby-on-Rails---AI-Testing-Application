@@ -1,0 +1,255 @@
+<%= turbo_frame_tag "map_container" do %>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+
+
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin="">
+  </script>
+
+
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+
+  <div id="map" style="height: 75vh;"></div>
+
+
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var map = L.map('map').setView([0, 0], 2);
+
+    // --- Base layers and user layers ---
+    var baseLayersByMap = {};
+    var overlaysByMap = {};
+
+    <% (@maps || []).each do |map_record| %>
+      <% tile = map_record.map_tiles.first %>
+      <% if tile.present? %>
+        baseLayersByMap["<%= map_record.name %>"] =
+          L.tileLayer("<%= tile.data %>", { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+      <% end %>
+
+      overlaysByMap["<%= map_record.name %>"] = {};
+      <% map_record.user_layers.each do |layer| %>
+        overlaysByMap["<%= j map_record.name %>"]["<%= j layer.name %>"] = L.geoJSON(<%= raw layer.geojson_data %>, {
+          onEachFeature: function(feature, leafletLayer) {
+            const props = feature.properties || {};
+            let name = props.name || "<%= j layer.name %>";
+            let amenity = props.amenity || "Category Not Found";
+            let description = props.popupContent || props.description || "No description available";
+
+            let html = `
+              <div style="min-width: 150px;">
+                <b style="font-size: 1.1em; color: #2c3e50;">Name: ${name}</b>
+                <br>
+                <p style="font-size: 0.95em; margin-bottom: 0px; margin-top: 10px;"><b>Status:</b> ${amenity}</p>
+                <p style="font-size: 0.95em; margin-top: 0px;"><b>Description:</b> ${description}</p>
+              </div>
+            `;
+            leafletLayer.bindPopup(html);
+          }
+        });
+      <% end %>
+    <% end %>
+
+    // --- Initialize first map ---
+    var firstMapName = Object.keys(baseLayersByMap)[0];
+    var currentBaseLayer = baseLayersByMap[firstMapName];
+    var currentOverlays = overlaysByMap[firstMapName];
+
+    if (currentBaseLayer) currentBaseLayer.addTo(map);
+    Object.values(currentOverlays).forEach(layer => layer.addTo(map));
+
+    // --- Alert layers ---
+    var alertLayersGroup = new L.FeatureGroup();
+    map.addLayer(alertLayersGroup);
+
+
+
+    // --- Map dropdown ---
+    var mapControlDiv = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+    var select = L.DomUtil.create('select', '', mapControlDiv);
+    Object.keys(baseLayersByMap).forEach(name => {
+      var option = document.createElement('option');
+      option.value = name;
+      option.text = name;
+      if(name === firstMapName) option.selected = true;
+      select.appendChild(option);
+    });
+    L.DomEvent.disableClickPropagation(mapControlDiv);
+    select.onchange = function() {
+      var selected = select.value;
+      if(currentBaseLayer) map.removeLayer(currentBaseLayer);
+      Object.values(currentOverlays).forEach(layer => map.removeLayer(layer));
+      map.removeControl(overlayControl);
+      currentBaseLayer = baseLayersByMap[selected];
+      currentOverlays = overlaysByMap[selected];
+      if(currentBaseLayer) currentBaseLayer.addTo(map);
+      Object.values(currentOverlays).forEach(layer => layer.addTo(map));
+      overlayControl = L.control.layers(null, {...currentOverlays}, { collapsed: false }).addTo(map);
+    };
+    L.Control.MapSelect = L.Control.extend({
+      onAdd: function() { return mapControlDiv; },
+      onRemove: function() {}
+    });
+    new L.Control.MapSelect({ position: 'topright' }).addTo(map);
+      
+    // --- Overlay controls ---
+    var overlayControl = L.control.layers(null, {...currentOverlays}, { collapsed: false }).addTo(map);
+    var alertOverlayControl = L.control.layers(null, {}, { collapsed: false }).addTo(map);
+    alertOverlayControl.addOverlay(alertLayersGroup, "Alerts");
+
+    // --- Temporary group for new alert creation ---
+    var currentAlertGroup = new L.FeatureGroup();
+    map.addLayer(currentAlertGroup);
+
+    // --- Leaflet Draw ---
+    var drawControl = new L.Control.Draw({
+      draw: {
+        polygon: true,
+        polyline: true,
+        rectangle: true,
+        circle: true,
+        marker: true,
+        circlemarker: false
+      },
+      edit: { featureGroup: alertLayersGroup, remove: true }
+    });
+    map.addControl(drawControl);
+
+    // --- Capture shapes while drawing ---
+    map.on(L.Draw.Event.CREATED, function(e) {
+      currentAlertGroup.addLayer(e.layer);
+    });
+
+    // --- Stop Editing for new alert ---
+    var stopEditDiv = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+    stopEditDiv.innerHTML = '<button style="padding:2px 6px; font-size:0.9em;">Stop Editing</button>';
+    stopEditDiv.onclick = function() {
+      if(currentAlertGroup.getLayers().length === 0) return;
+      var name = prompt("Enter name for this alert:", "New Alert") || "New Alert";
+      var newAlertGroup = new L.FeatureGroup();
+      currentAlertGroup.eachLayer(layer => {
+        newAlertGroup.addLayer(layer);
+        layer.bindPopup(`
+          <div style="min-width: 150px;">
+            <b style="font-size: 1.1em; color: #c0392b;">Alert: ${name}</b>
+          </div>
+        `);
+      });
+      newAlertGroup._alert_name = name;
+      alertLayersGroup.addLayer(newAlertGroup);
+      addAlertOverlayWithEdit(newAlertGroup, name);
+
+      fetch("/alert_layers", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json','X-CSRF-Token': Rails.csrfToken() },
+        body: JSON.stringify({ alert_layer: { name: name, geojson_data: newAlertGroup.toGeoJSON() } })
+      }).then(r => r.json()).then(data => newAlertGroup._alert_id = data.id);
+
+      currentAlertGroup.clearLayers();
+    };
+    L.Control.StopEdit = L.Control.extend({ onAdd: () => stopEditDiv, onRemove: () => {} });
+    new L.Control.StopEdit({ position: 'topright' }).addTo(map);
+
+    // --- Enable/disable editing of an alert ---
+    function enableAlertEditing(alertGroup) {
+      alertGroup.eachLayer(layer => {
+        if(layer.editing) layer.editing.enable();
+        else if(layer instanceof L.Marker) layer.dragging.enable();
+      });
+      alertGroup.editingEnabled = true;
+      alertGroup.eachLayer(layer => layer.setStyle?.({color:'#2980b9'}));
+    }
+    function disableAlertEditing(alertGroup) {
+      alertGroup.eachLayer(layer => {
+        if(layer.editing) layer.editing.disable();
+        else if(layer instanceof L.Marker) layer.dragging.disable();
+      });
+      alertGroup.editingEnabled = false;
+      alertGroup.eachLayer(layer => layer.setStyle?.({color:'#c0392b'}));
+      if(alertGroup._alert_id) {
+        fetch(`/alert_layers/${alertGroup._alert_id}`, {
+          method: "PATCH",
+          headers: { 'Content-Type': 'application/json','X-CSRF-Token': Rails.csrfToken() },
+          body: JSON.stringify({ alert_layer: { geojson_data: alertGroup.toGeoJSON() } })
+        });
+      }
+    }
+
+    // --- Add Edit button inside overlay control ---
+    function addAlertOverlayWithEdit(alertGroup, alertName) {
+      alertOverlayControl.addOverlay(alertGroup, alertName);
+      var container = alertOverlayControl._container;
+      if(!container) return;
+      setTimeout(() => {
+        var labels = container.querySelectorAll('label');
+        labels.forEach(label => {
+          if(label.innerText === alertName && !label.querySelector('.edit-alert-btn')) {
+            var editBtn = document.createElement('button');
+            editBtn.className = 'edit-alert-btn';
+            editBtn.innerText = 'Edit';
+            editBtn.style.marginLeft = '5px';
+            editBtn.style.fontSize = '0.8em';
+            editBtn.onclick = function(e) {
+              e.stopPropagation();
+              if(!alertGroup.editingEnabled) enableAlertEditing(alertGroup);
+              else disableAlertEditing(alertGroup);
+            };
+            label.appendChild(editBtn);
+          }
+        });
+      }, 50);
+    }
+
+    // --- Load existing alerts with Edit button ---
+    <% (@alert_layers || []).each do |layer| %>
+      var geojsonLayer = L.geoJSON(<%= raw layer.geojson_data %>, {});
+      geojsonLayer._alert_name = "<%= j layer.name %>";
+      geojsonLayer._alert_id = <%= layer.id %>;
+      alertLayersGroup.addLayer(geojsonLayer);
+      addAlertOverlayWithEdit(geojsonLayer, "<%= j layer.name %>");
+    <% end %>
+
+    // --- Handle deletion/edit via Leaflet Draw ---
+    map.on('draw:edited', e => {
+      e.layers.eachLayer(layer => {
+        if(layer._alert_name && layer._alert_id) {
+          fetch(`/alert_layers/${layer._alert_id}`, {
+            method: "PATCH",
+            headers: { 'Content-Type': 'application/json','X-CSRF-Token': Rails.csrfToken() },
+            body: JSON.stringify({ alert_layer: { geojson_data: layer.toGeoJSON() } })
+          });
+        }
+      });
+    });
+    map.on('draw:deleted', e => {
+      e.layers.eachLayer(layer => {
+        if(layer._alert_id) {
+          fetch(`/alert_layers/${layer._alert_id}`, {
+            method: "DELETE",
+            headers: { 'X-CSRF-Token': Rails.csrfToken() }
+          });
+        }
+      });
+    });
+
+  });
+  </script>
+
+<% end %>
+
+
+
+
+
+
