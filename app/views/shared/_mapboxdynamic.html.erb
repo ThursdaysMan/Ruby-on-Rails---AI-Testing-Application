@@ -14,7 +14,7 @@
   </script>
 
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-
+  <hr/>
   <div id="map" style="height: 75vh;"></div>
 
 
@@ -27,7 +27,7 @@
       container._leaflet_id = null;
     }
 
-    var map = L.map('map').setView([0, 0], 2);
+    var map = L.map('map').setView([48.8566, 2.3522], 12);
 
     var baseLayersByMap = {};
     var overlaysByMap = {};
@@ -35,8 +35,27 @@
     <% (@maps || []).each do |map_record| %>
       <% tile = map_record.map_tiles.first %>
       <% if tile.present? %>
-        baseLayersByMap["<%= map_record.name %>"] =
-          L.tileLayer("<%= tile.data %>", { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' });
+        <% if tile.tile_type == 0 %>
+          baseLayersByMap["<%= map_record.name %>"] =
+            L.tileLayer("<%= tile.data %>", 
+            { maxZoom: 19, 
+            attribution: '&copy; OpenStreetMap contributors' 
+            });
+
+        <% elsif tile.tile_type == 1 %>
+          baseLayersByMap["<%= map_record.name %>"] =
+            L.tileLayer.wms("<%= tile.data + current_user.satellite_api_link %>", 
+            { layers: 'TRUE_COLOR',
+             format: 'image/jpeg',
+             transparent: false,
+             time: '2023-01-01/2024-01-01',
+             maxCc: 20,
+             version: '1.1.1',
+             minZoom: 10,
+             maxZoom: 18,
+             attribution: '&copy; Copernicus' 
+             });
+        <% end %>
       <% end %>
 
       overlaysByMap["<%= map_record.name %>"] = {};

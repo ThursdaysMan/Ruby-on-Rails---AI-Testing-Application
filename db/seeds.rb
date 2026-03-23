@@ -8,14 +8,21 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-dummy = User.find_or_create_by!(email: 'example@example.com') do |u|
+default_map_type = 0
+copernicus_map_type = 1
+
+example_api = "3bd028f5-ab9f-4903-98ec-11d3be37e547"
+
+dummy = User.find_or_create_by!(email: 'example@example.com', satellite_api_link: example_api) do |u|
     u.password = "password"
 end
+
+
 
 #Map 1 - Default
 map = Map.find_or_create_by!(name: "Default Map", user: dummy)
 
-osm_tile = MapTile.find_or_create_by!(name: "OSM Standard") do |t|
+osm_tile = MapTile.find_or_create_by!(name: "OSM Standard", tile_type: default_map_type) do |t|
     t.data = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
 end
 
@@ -24,11 +31,20 @@ MapMapTile.find_or_create_by!(map: map, map_tile: osm_tile)
 #Map 2 - Testing Map
 map2 = Map.find_or_create_by!(name: "OpenTopoMap", user: dummy)
 
-otm_tile = MapTile.find_or_create_by!(name: "OTM Standard") do |t|
+otm_tile = MapTile.find_or_create_by!(name: "OTM Standard", tile_type: default_map_type) do |t|
     t.data = "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
 end
 
 MapMapTile.find_or_create_by!(map: map2, map_tile: otm_tile)
+
+#Map 3 - Copernicus Map
+map3 = Map.find_or_create_by!(name: "Copernicus Map", user: dummy)
+
+copernicus_tile = MapTile.find_or_create_by!(name: "Copernicus Test", tile_type: copernicus_map_type) do |t|
+    t.data = "https://sh.dataspace.copernicus.eu/ogc/wms/"
+end
+
+MapMapTile.find_or_create_by!(map: map3, map_tile: copernicus_tile)
 
 #GeoJson Test
 geojson_file = Rails.root.join("test/fixtures/files/example.geojson")

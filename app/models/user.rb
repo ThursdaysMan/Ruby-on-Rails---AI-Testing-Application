@@ -9,4 +9,10 @@ class User < ApplicationRecord
   has_many :user_layers
   has_many :maps
   has_many :alert_layers, dependent: :destroy
+
+  VALID_API_FORMAT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i
+
+  validates :satellite_api_link,
+    format: { with: VALID_API_FORMAT, message: "API Must be formatted xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"},
+  allow_blank: true
 end

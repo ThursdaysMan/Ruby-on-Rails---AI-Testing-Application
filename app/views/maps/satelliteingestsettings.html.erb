@@ -1,0 +1,36 @@
+<%= turbo_frame_tag "settings_frame" do %>
+  <div class="card p-4">
+    <h3>Satellite Configuration</h3>
+    <hr>
+
+    <%= form_with scope: :user, url: update_settings_path, method: :patch do |f| %>
+      
+      <% flash.each do |type, message| %>
+        <% 
+          alert_class = case type.to_s
+                        when 'notice', 'success' then 'alert-success'
+                        when 'alert', 'error', 'unprocessable_entity' then 'alert-danger'
+                        else 'alert-info'
+                        end 
+        %>
+        <div class="alert <%= alert_class %> fade show" role="alert">
+          <%= message %>
+        </div>
+      <% end %>
+
+      <div class="mb-3">
+        <%= f.label :satellite_api_link, "Your Copernicus Satellite API Endpoint", class: "form-label" %>
+        <%= f.text_field :satellite_api_link, 
+                         class: "form-control", 
+                         placeholder: "https://api.satellite.com/v1/...",
+                         value: current_user.satellite_api_link %>
+        <div class="form-text">This link is unique to your satellite provider account.</div>
+      </div>
+
+      <div class="actions">
+        <%= f.submit "Save Changes", class: "btn btn-primary" %>
+      </div>
+      
+    <% end %>
+  </div>
+<% end %>

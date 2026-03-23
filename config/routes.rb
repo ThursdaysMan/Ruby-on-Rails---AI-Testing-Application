@@ -18,9 +18,18 @@ Rails.application.routes.draw do
   #resources :entries, only: [:create, :new, :destroy]
 
   root 'maps#index'
-  resources :maps, only: [:index]
+  resources :maps, only: [:index] 
   resources :alert_layers, only: [:create, :destroy, :update]
 
+  #Other Routes
+  get 'satellite_ingest_settings', to: 'maps#satelliteingestsettings', as: 'satellite_settings'
+  patch 'update_settings', to: 'maps#update_settings', as: 'update_settings'
+  get 'update_settings', to: 'maps#satelliteingestsettings'
+
+  #Dynamic Map Routes
   get 'update_alert_map', to: 'maps#update_alert_map', as: 'update_alert_map'
   get 'show_base_map', to: 'maps#show_base_map', as: 'show_base_map'
+  get 'show_alert_list', to: 'maps#show_alert_list', as: 'show_alert_list'
+  get 'show_notification_list', to: 'maps#show_notification_list', as: 'show_notification_list'
+
 end

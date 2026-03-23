@@ -1,0 +1,100 @@
+<%= turbo_frame_tag "map_container" do %>
+  <hr/>
+  <div class="container">
+    <div>
+        <h1>Map Alerts</h1>
+    </div>
+
+    <div id="alert-display-section" class="flex flex-col gap-2">
+        <% if @alert_layers.empty? %>
+            <h3> No Alert Layers Set</h3>
+            <p> Use the Alert Create tab below to start creating alert layers </p>
+        <% else %>
+            <% (@alert_layers || []).each do |alert| %>
+            <div class="alert-entry row align-items-center items-center justify-between p-2 border rounded shadow-sm bg-white"
+                data-alert-id="<%= alert.id %>">
+
+                <!-- Editable name + created_at -->   
+                    <div class="col-md-6">
+                        <input type="text"
+                                class="alert-name-input border p-1 rounded w-full"
+                                value="<%= j alert.name %>"
+                                data-alert-id="<%= alert.id %>">
+                        <small class="text-gray-500 mt-1">
+                            Created at: <%= alert.created_at.strftime("%b %d, %Y %H:%M") %>
+                        </small>
+                    </div>
+
+                    <!-- Map Dropdown -->
+                    <div class="col-md-3">
+
+                    </div>
+                    
+                    <!-- Buttons -->
+                    <div class="col-md-3">
+                        <%= link_to update_alert_map_path(alert), class: "btn btn-sm btn-primary" do %>
+                        Edit on map
+                        <% end %>
+
+                        <button class="btn btn-sm btn-danger alert-delete-btn" data-alert-id="<%= alert.id %>">
+                            Delete
+                        </button>
+                    </div>
+
+            </div>
+            <% end %>
+        <% end %>
+    </div>
+
+        <script type="text/javascript">
+            document.addEventListener("turbo:frame-load", (event) => {
+            // Only attach listeners if this is the correct frame
+            if (event.target.id !== "map_container") return;
+
+            const container = document.getElementById("alert-display-section");
+            if (!container) return;
+
+            // --- Event delegation for inline name editing ---
+            container.addEventListener("change", (e) => {
+                if (e.target && e.target.matches(".alert-name-input")) {
+                const alertId = e.target.dataset.alertId;
+                const newName = e.target.value;
+
+                fetch(`/alert_layers/${alertId}`, {
+                    method: "PATCH",
+                    headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ alert_layer: { name: newName } })
+                });
+                }
+            });
+
+            // --- Event delegation for delete buttons ---
+            container.addEventListener("click", (e) => {
+                if (e.target && e.target.matches(".alert-delete-btn")) {
+                const alertId = e.target.dataset.alertId;
+                if (!confirm("Are you sure you want to delete this alert?")) return;
+
+                fetch(`/alert_layers/${alertId}`, {
+                    method: "DELETE",
+                    headers: {
+                    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+                    }
+                }).then(response => {
+                    if (!response.ok) {
+                    alert("Failed to delete alert");
+                    return;
+                    }
+                    // Remove the entry from DOM
+                    const entry = container.querySelector(`.alert-entry[data-alert-id='${alertId}']`);
+                    if (entry) entry.remove();
+                });
+                }
+            });
+            });
+        </script>
+    </div>
+<% end %>
+

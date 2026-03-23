@@ -22,30 +22,46 @@
       <div class="col-sm-5">
       </div>
 
-    
+      
+      <% if user_signed_in? %>
       <div class="col-sm-1 nav-item align-items-center">
-        <%= link_to "Sign Up",
-          new_user_registration_path,
-          class:'nav-link' %>
-      </div>
+      </div>  
+        <div class="col-sm-1 nav-item align-items-center">
+          <%= link_to "Edit Profile",
+            edit_user_registration_path,
+            class:'nav-link' %>
+        </div>
 
-      <div class="col-sm-1 nav-item align-items-center">
-        <%= link_to "Sign In",
-          new_user_session_path,
+        <div class="col-sm-1 nav-item align-items-center">
+          <%= link_to "Satellite Settings",
+          satellite_settings_path, 
           class:'nav-link' %>
-      </div>
+        </div>
+      
+        <div class="col-sm-1 nav-item align-items-center">
+          <%= link_to "Sign Out",
+            destroy_user_session_path,
+            data: {turbo_method: :delete},
+            class:'nav-link' %>
+        </div>
+      <% else %>
+        <div class="col-sm-2 nav-item align-items-center">
+        </div>
+        <div class="col-sm-1 nav-item align-items-center">
+          <%= link_to "Sign Up",
+            new_user_registration_path,
+            class:'nav-link' %>
+        </div>
 
-      <div class="col-sm-1 nav-item align-items-center">
-        <%= link_to "Edit Profile",
-          edit_user_registration_path,
-          class:'nav-link' %>
-      </div>
+        <div class="col-sm-1 nav-item align-items-center">
+          <%= link_to "Sign In",
+            new_user_session_path,
+            class:'nav-link' %>
+        </div>
+      <% end %>
 
-      <div class="col-sm-1 nav-item align-items-center">
-        <%= link_to "Sign Out",
-          destroy_user_session_path,
-          class:'nav-link' %>
-      </div>
+
+      
 
     </div>
 
