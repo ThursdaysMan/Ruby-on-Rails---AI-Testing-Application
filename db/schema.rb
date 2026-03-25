@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_03_23_143751) do
+ActiveRecord::Schema[7.2].define(version: 2026_03_25_125532) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -20,6 +20,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_23_143751) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "comparison_base_date"
+    t.float "threshold_user"
     t.index ["user_id"], name: "index_alert_layers_on_user_id"
   end
 
@@ -30,6 +32,18 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_23_143751) do
     t.datetime "updated_at", null: false
     t.index ["map_id"], name: "index_map_map_tiles_on_map_id"
     t.index ["map_tile_id"], name: "index_map_map_tiles_on_map_tile_id"
+  end
+
+  create_table "map_predictions", force: :cascade do |t|
+    t.bigint "map_id", null: false
+    t.bigint "user_id", null: false
+    t.jsonb "geojson_data"
+    t.datetime "processed_at"
+    t.string "ai_model_version"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["map_id"], name: "index_map_predictions_on_map_id"
+    t.index ["user_id"], name: "index_map_predictions_on_user_id"
   end
 
   create_table "map_tiles", force: :cascade do |t|
@@ -45,6 +59,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_23_143751) do
     t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "external_id"
+    t.string "download_url"
+    t.index ["external_id"], name: "index_maps_on_external_id"
     t.index ["user_id"], name: "index_maps_on_user_id"
   end
 
@@ -84,6 +101,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_03_23_143751) do
   add_foreign_key "alert_layers", "users"
   add_foreign_key "map_map_tiles", "map_tiles"
   add_foreign_key "map_map_tiles", "maps"
+  add_foreign_key "map_predictions", "maps"
+  add_foreign_key "map_predictions", "users"
   add_foreign_key "maps", "users"
   add_foreign_key "user_layers", "maps"
   add_foreign_key "user_layers", "users"

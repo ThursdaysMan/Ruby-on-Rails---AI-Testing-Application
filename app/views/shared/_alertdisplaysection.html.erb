@@ -14,8 +14,8 @@
             <div class="alert-entry row align-items-center items-center justify-between p-2 border rounded shadow-sm bg-white"
                 data-alert-id="<%= alert.id %>">
 
-                <!-- Editable name + created_at -->   
-                    <div class="col-md-6">
+                <!-- Editable Name and Non-Editable Creation Date -->   
+                    <div class="col-md-5">
                         <input type="text"
                                 class="alert-name-input border p-1 rounded w-full"
                                 value="<%= j alert.name %>"
@@ -25,11 +25,27 @@
                         </small>
                     </div>
 
-                    <!-- Map Dropdown -->
-                    <div class="col-md-3">
-
+                    <!-- Threshold -->
+                    <div class="col-md-2"> 
+                        <label class="block text-xs text-gray-400">Threshold</label> 
+                        <input type="number" 
+                            step="0.1" 
+                            class="alert-threshold-input border p-1 rounded w-full text-sm" 
+                            value="<%= alert.threshold_user %>" 
+                            placeholder="0.0" 
+                            data-alert-id="<%= alert.id %>"> 
                     </div>
-                    
+
+                    <!-- Calendar -->
+                    <div class="col-md-2">
+                        <label class="block text-xs text-gray-400">Comparison Date</label>
+                        <input type="date" 
+                            class="alert-date-input border p-1 rounded w-full text-sm"
+                            value="<%= alert.comparison_base_date&.to_date %>"
+                            min="2024-01-01"
+                            data-alert-id="<%= alert.id %>">
+                    </div>
+
                     <!-- Buttons -->
                     <div class="col-md-3">
                         <%= link_to update_alert_map_path(alert), class: "btn btn-sm btn-primary" do %>
@@ -54,7 +70,7 @@
             const container = document.getElementById("alert-display-section");
             if (!container) return;
 
-            // --- Event delegation for inline name editing ---
+            // Name Editing Code
             container.addEventListener("change", (e) => {
                 if (e.target && e.target.matches(".alert-name-input")) {
                 const alertId = e.target.dataset.alertId;
@@ -71,7 +87,52 @@
                 }
             });
 
-            // --- Event delegation for delete buttons ---
+            //Threshold Code
+            container.addEventListener("change", (e) => {
+                if (e.target && e.target.matches(".alert-threshold-input")) {
+                    const alertId = e.target.dataset.alertId;
+                    const newThreshold = e.target.value;
+
+                    fetch(`/alert_layers/${alertId}`, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ 
+                            alert_layer: { threshold_user: newThreshold } 
+                        })
+                    }).then(response => {
+                        if (!response.ok) alert("Failed to update threshold");
+                    });
+                }
+            });
+
+            
+            //Calendar Code
+            container.addEventListener("change", (e) => {
+                if (e.target && e.target.matches(".alert-date-input")) {
+                    const alertId = e.target.dataset.alertId;
+                    const newDate = e.target.value;
+
+                    fetch(`/alert_layers/${alertId}`, {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content
+                        },
+                        body: JSON.stringify({ 
+                            alert_layer: { comparison_base_date: newDate } 
+                        })
+                    }).then(response => {
+                        if (!response.ok) alert("Failed to update date");
+                    });
+                }
+            });
+
+            
+            
+            //Delete Button Code
             container.addEventListener("click", (e) => {
                 if (e.target && e.target.matches(".alert-delete-btn")) {
                 const alertId = e.target.dataset.alertId;

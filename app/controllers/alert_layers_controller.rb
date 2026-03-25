@@ -4,7 +4,7 @@ class AlertLayersController < ApplicationController
     def create
         @alert_layer = current_user.alert_layers.new(alert_layer_params)
         if @alert_layer.save
-            render json: @alert_layer, status: :creted
+            render json: @alert_layer, status: :created
         else
             render json: { errors: @alert_layer.errors.full_messages}, status: :unprocessable_entity
         end
@@ -26,6 +26,6 @@ class AlertLayersController < ApplicationController
     end
 
     def alert_layer_params
-        params.require(:alert_layer).permit(:name, geojson_data: {})
+        params.require(:alert_layer).permit(:name, :comparison_base_date, :threshold_user, geojson_data: {})
     end
 end
