@@ -41,10 +41,8 @@ gem 'devise'
 gem 'tensorflow'
 gem 'npy'
 gem 'numo-narray'
-gem 'chroma-db'
+#gem 'chroma-db' #Potential for future features
 
-#GIS Functionality
-gem 'libgd-gis'
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
