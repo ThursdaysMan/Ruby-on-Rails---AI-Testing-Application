@@ -1,0 +1,45 @@
+<hr/>
+<% if user_signed_in? %>
+  <div>
+    <div class="row align-items-center">  
+      <div class="col-md-3 d-flex align-items-center justify-content-center py-2">     
+        <%= link_to show_base_map_path, data: { turbo_frame: "map_container" }, class: "btn btn-secondary btn-lg btn-block w-100 py-2" do %>    
+          <p>Map</p>
+        <% end %>
+      </div>
+      <div class="col-md-3 d-flex align-items-center justify-content-center py-2"> 
+        <%= link_to update_alert_map_path, data: { turbo_frame: "map_container" }, class: "btn btn-secondary btn-lg btn-block w-100 py-2" do %>
+          <p>Alert Create</p>
+        <% end %>
+      </div>
+      <div class="col-md-3 d-flex align-items-center justify-content-center py-2"> 
+        <%= link_to show_alert_list_path, data: { turbo_frame: "map_container"}, class: "btn btn-secondary btn-lg btn-block w-100 py-2" do %>
+          <p>Alert Edit</p>
+        <% end %>
+      </div>
+      <div class="col-md-3 d-flex align-items-center justify-content-center py-2"> 
+        <%= link_to show_notification_list_path, data: {turbo_frame: "map_container"}, class: "btn btn-secondary btn-lg btn-block w-100 py-2" do %>
+          <p>Notifications</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>
+ 
+<footer class="container-fluid" style="height: 5vh;">
+<hr/>
+<div class="row align-items-center">  
+    <div class="col-md-4 d-flex align-items-center justify-content-center">  
+      <p>Solirius Graduate Academy</p>
+    </div>
+    
+    <div class="col-md-4 d-flex align-items-center justify-content-center">
+      <%= image_tag "Sirius-Logo.svg", alt: "Sirius App Logo", class: "navbar-brand d-flex align-items-center", height: 70 %>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-center justify-content-center">
+      <p>Journal App Project</p>
+    </div>  
+  </div>
+
+</footer>

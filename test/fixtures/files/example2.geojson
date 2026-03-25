@@ -1,0 +1,17 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Who knows really",
+        "amenity": "Baseball Stadium?",
+        "popupContent": "This absolutely isn't a stadium!"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [104.99404, -39.75621]
+      }
+    }
+  ]
+}
